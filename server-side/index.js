@@ -6,7 +6,7 @@ const morgan = require("morgan");
 const passport = require("passport");
 const db = require("./services/db.Service");
 const authRouter = require("./controllers/Auth.Controller");
-const taskRouter = require("./controllers/Task.Controller");
+const propertyRouter = require("./controllers/Property.Controller");
 const passportConfig = require("./middleware/Auth.Middleware");
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -25,12 +25,15 @@ app.use(errorhandler());
 app.use(morgan("dev"));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }))
 app.use(passport.session());
 
 db.connectToDB();
 
+app.use('/statics', express.static('statics'))
+
 app.use("/auth", authRouter);
-app.use("/tasks", taskRouter);
+app.use("/properties", propertyRouter);
 
 app.listen(PORT, () => {
   console.log(`Server up and run on port: ${PORT}`);

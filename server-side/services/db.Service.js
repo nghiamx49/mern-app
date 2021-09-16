@@ -1,18 +1,20 @@
 const mongoose = require("mongoose");
 const db = {};
 
-const users = require("../models/User.Model");
-const tasks = require("../models/Task.Model");
+const user = require("../models/User.Model");
+const property = require("../models/Property.Model");
+const propertyImg = require('../models/PropertyImage.Model')
 
 mongoose.Promise = global.Promise;
 
 db.mongoose = mongoose;
 
-db.Users = users;
-db.Tasks = tasks;
+db.User = user;
+db.Property = property;
+db.PropertyImage = propertyImg;
 
-const User = db.Users;
-const Task = db.Tasks;
+const User = db.User;
+const Property = db.Property;
 
 db.connectToDB = async () => {
   try {
@@ -36,19 +38,10 @@ db.initialize = async () => {
         username: "mxnghia49",
         password: "mxnghia49",
         role: process.env.ADMIN,
-        dateofBirth: Date.now(),
+        fullname: "Mai Xuan Nghia",
+        dateOfBirth: Date.now(),
       });
       await newUser.save();
-    }
-    let countTask = await Task.estimatedDocumentCount();
-    if (countTask === 0) {
-      let newTask = new Task({
-        taskName: "Go to sleep",
-        taskDescription: "Gtoo sleep go to sleep....",
-        isDone: false,
-        ofUser: newUser,
-      });
-      await newTask.save();
     }
   } catch (error) {
     console.log(error);

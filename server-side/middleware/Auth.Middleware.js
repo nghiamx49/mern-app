@@ -4,7 +4,7 @@ const ExtractJwt = require("passport-jwt").ExtractJwt;
 const passport = require("passport");
 const db = require("../services/db.Service");
 
-const User = db.Users;
+const User = db.User;
 
 // const extractToken = (req) => {
 //   let token = null;

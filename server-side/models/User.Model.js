@@ -7,6 +7,7 @@ const UserSchema = mongoose.Schema({
   fullName: String,
   dateOfBirth: Date,
   role: String,
+  avatar: String,
 });
 
 UserSchema.pre("save", async function (next) {
@@ -23,7 +24,7 @@ UserSchema.pre("save", async function (next) {
   } catch (error) {
     next(error);
   }
-});
+}, { collection: 'users' });
 
 UserSchema.methods.comparePassword = function (password, next) {
   try {
@@ -42,4 +43,4 @@ UserSchema.methods.comparePassword = function (password, next) {
   }
 };
 
-module.exports = mongoose.model("Users", UserSchema);
+module.exports = mongoose.model("User", UserSchema);

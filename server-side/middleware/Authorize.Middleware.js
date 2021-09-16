@@ -1,5 +1,5 @@
 const db = require("../services/db.Service");
-const User = db.Users;
+const User = db.User;
 
 const objMiddlewareCustom = {
   isAdmin: async (req, res, next) => {

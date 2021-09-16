@@ -3,8 +3,12 @@ const db = require("../services/db.Service");
 const passport = require("passport");
 const Jwt = require("jsonwebtoken");
 const authorize = require("../middleware/Authorize.Middleware");
+const fs = require('fs');
 
-const User = db.Users;
+const { updateAvatar } = require('../middleware/multer');
+
+const User = db.User;
+
 
 const signToken = (userId) => {
   return Jwt.sign(
@@ -24,7 +28,7 @@ authRouter.get(
   passport.authenticate("jwt", { session: false }),
   authorize.isAdmin,
   (req, res) => {
-    res.status(200).json({ message: "hello world" });
+    res.status(200).json({ data: req.user });
   },
 );
 
@@ -54,9 +58,11 @@ authRouter.post(
   },
 );
 
-authRouter.post("/register", async (req, res) => {
+authRouter.post("/register", updateAvatar.single('avatar'), async (req, res) => {
   const { username, password, fullname, dateOfBirth } = req.body;
   const checkExisted = await User.findOne({ username });
+  console.log(req.file.filename);
+  const url = req.protocol + '://' + req.get('host');
   if (!checkExisted) {
     const newUser = await new User({
       username,
@@ -64,13 +70,16 @@ authRouter.post("/register", async (req, res) => {
       fullname,
       dateOfBirth,
       role: process.env.User,
+      avatar: url + "/statics/avatar/" + req.file.filename
     });
     await newUser.save();
     res.status(201).json({
       message: "Register successfully",
+      user: newUser,
       mesError: false,
     });
   } else {
+    fs.unlinkSync(process.env.DIR_AVATAR + req.file.filename);
     res.status(400).json({
       message: "Account already existed",
       mesError: true,
@@ -78,10 +87,10 @@ authRouter.post("/register", async (req, res) => {
   }
 });
 
-authRouter.get(
-  "/logout",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res) => {},
-);
+// authRouter.get(
+//   "/logout",
+//   passport.authenticate("jwt", { session: false }),
+//   async (req, res) => { },
+// );
 
 module.exports = authRouter;
