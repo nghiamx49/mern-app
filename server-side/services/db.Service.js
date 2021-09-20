@@ -19,6 +19,7 @@ db.Location = location;
 
 const User = db.User;
 const Property = db.Property;
+const Avatar = db.Avatar;
 
 db.connectToDB = async () => {
   try {
@@ -38,14 +39,18 @@ db.initialize = async () => {
     let countUser = await User.estimatedDocumentCount();
     let newUser;
     if (countUser === 0) {
+      const newAvt = new Avatar();
       newUser = new User({
         username: "mxnghia49",
         password: "mxnghia49",
         role: process.env.ADMIN,
-        fullname: "Mai Xuan Nghia",
+        fullName: "Mai Xuan Nghia",
         dateOfBirth: Date.now(),
+        avatar: newAvt._id,
       });
       await newUser.save();
+      newAvt.userId = newUser._id;
+      await newAvt.save();
     }
   } catch (error) {
     console.log(error);

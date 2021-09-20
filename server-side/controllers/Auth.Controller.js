@@ -27,7 +27,7 @@ authRouter.get(
   "/",
   passport.authenticate("jwt", { session: false }),
   (req, res) => {
-    res.status(200).json({ data: req.user });
+    res.status(200).json({ user: req.user });
   },
 );
 
@@ -42,7 +42,7 @@ authRouter.post(
         token,
         message: "Login Successfully",
         mesError: false,
-        data: await User.findById(_id).populate('avatar', 'imageUrl'),
+        user: await User.findById(_id).populate('avatar', 'imageUrl'),
       });
     } else {
       res.status(401).json({
@@ -58,11 +58,11 @@ authRouter.post("/register", async (req, res) => {
   const checkExisted = await User.findOne({ username });
   console.log(req.body);
   if (!checkExisted) {
-    const avatar = await Avatar();
+    const avatar = await new Avatar();
     const newUser = await new User({
       username: username,
       password: password,
-      fullname: fullname,
+      fullName: fullname,
       dateOfBirth: dateOfBirth,
       role: process.env.User,
       avatar: avatar._id

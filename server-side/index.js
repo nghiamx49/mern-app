@@ -32,8 +32,8 @@ db.connectToDB();
 
 app.use('/statics', express.static('statics'))
 
-app.use("/auth", authRouter);
-app.use("/properties", propertyRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/properties", propertyRouter);
 
 app.listen(PORT, () => {
   console.log(`Server up and run on port: ${PORT}`);
