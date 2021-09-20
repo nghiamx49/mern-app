@@ -3,7 +3,9 @@ const db = {};
 
 const user = require("../models/User.Model");
 const property = require("../models/Property.Model");
-const propertyImg = require('../models/PropertyImage.Model')
+const propertyImg = require('../models/PropertyImage.Model');
+const avatar = require('../models/Avatar.Model');
+const location = require('../models/Location.Model')
 
 mongoose.Promise = global.Promise;
 
@@ -12,6 +14,8 @@ db.mongoose = mongoose;
 db.User = user;
 db.Property = property;
 db.PropertyImage = propertyImg;
+db.Avatar = avatar;
+db.Location = location;
 
 const User = db.User;
 const Property = db.Property;

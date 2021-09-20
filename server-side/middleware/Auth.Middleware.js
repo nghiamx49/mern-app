@@ -34,7 +34,7 @@ passport.use(
     },
     async (payload, next) => {
       try {
-        let user = await User.findById(payload.subject);
+        let user = await User.findById(payload.subject).populate('avatar', "imageUrl");
         if (user) {
           return next(null, user);
         }

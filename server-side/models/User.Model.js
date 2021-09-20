@@ -7,13 +7,13 @@ const UserSchema = mongoose.Schema({
   fullName: String,
   dateOfBirth: Date,
   role: String,
-  avatar: String,
+  avatar: { type: mongoose.Schema.Types.ObjectId, ref: "Avatar" },
 });
 
 UserSchema.pre("save", async function (next) {
   try {
     const user = this;
-    if (!user.isModified("passowrd")) {
+    if (!user.isModified("password")) {
       next();
     }
     user.password = CryptoJS.AES.encrypt(

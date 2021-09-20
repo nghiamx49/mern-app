@@ -7,13 +7,13 @@ const fs = require('fs');
 
 const { updateAvatar } = require('../middleware/multer');
 
-const User = db.User;
+const { User, Avatar } = db;
 
 
 const signToken = (userId) => {
   return Jwt.sign(
     {
-      issue: "Todo-app",
+      issue: "rentalZ.application",
       subject: userId,
     },
     process.env.SECRET_KEY,
@@ -26,7 +26,6 @@ const signToken = (userId) => {
 authRouter.get(
   "/",
   passport.authenticate("jwt", { session: false }),
-  authorize.isAdmin,
   (req, res) => {
     res.status(200).json({ data: req.user });
   },
@@ -37,17 +36,13 @@ authRouter.post(
   passport.authenticate("local", { session: false }),
   async (req, res) => {
     if (req.isAuthenticated()) {
-      const { _id, username, role, fullname } = req.user;
+      const { _id, avatar } = req.user;
       const token = signToken(_id);
       res.status(200).json({
+        token,
         message: "Login Successfully",
         mesError: false,
-        data: {
-          username,
-          role,
-          fullname,
-          token,
-        },
+        data: await User.findById(_id).populate('avatar', 'imageUrl'),
       });
     } else {
       res.status(401).json({
@@ -58,34 +53,63 @@ authRouter.post(
   },
 );
 
-authRouter.post("/register", updateAvatar.single('avatar'), async (req, res) => {
+authRouter.post("/register", async (req, res) => {
   const { username, password, fullname, dateOfBirth } = req.body;
   const checkExisted = await User.findOne({ username });
-  console.log(req.file.filename);
-  const url = req.protocol + '://' + req.get('host');
+  console.log(req.body);
   if (!checkExisted) {
+    const avatar = await Avatar();
     const newUser = await new User({
-      username,
-      password,
-      fullname,
-      dateOfBirth,
+      username: username,
+      password: password,
+      fullname: fullname,
+      dateOfBirth: dateOfBirth,
       role: process.env.User,
-      avatar: url + "/statics/avatar/" + req.file.filename
+      avatar: avatar._id
     });
     await newUser.save();
+    avatar.userId = newUser._id;
+    await avatar.save();
     res.status(201).json({
       message: "Register successfully",
       user: newUser,
       mesError: false,
     });
   } else {
-    fs.unlinkSync(process.env.DIR_AVATAR + req.file.filename);
     res.status(400).json({
       message: "Account already existed",
       mesError: true,
     });
   }
 });
+
+authRouter.put('/update_avatar', passport.authenticate("jwt", { session: false }), updateAvatar.single('avatar')
+  , async (req, res) => {
+    try {
+      const avatarUrl = '/statics/avatar/' + req.file.filename;
+      const avatar = await Avatar.findById(req.user.avatar._id.toString())
+      if (avatar.imageUrl === "") {
+        avatar.imageUrl = avatarUrl;
+        await avatar.save();
+      }
+      else {
+        fs.unlinkSync('.' + avatar.imageUrl);
+        avatar.imageUrl = avatarUrl;
+        await avatar.save();
+      }
+      res.status(200).json({
+        message: "update avatar successfully",
+        updateAvt: avatar.imageUrl,
+        mesError: false,
+      })
+    } catch (error) {
+      fs.unlinkSync(process.env.DIR_AVATAR + req.file.filename);
+      res.status(200).json({
+        message: "update avatar failed",
+        mesError: true,
+      })
+    }
+  })
 
 // authRouter.get(
 //   "/logout",
