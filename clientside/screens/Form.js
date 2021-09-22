@@ -11,13 +11,12 @@ import {
     Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
+import {listBedroomType, listFurnitureType, listProperty} from '../costants/'
 import InputField from '../components/InputField';
 import DropdownCustom from '../components/Dropdown';
 import ConfirmDialog from '../components/ConfirmDialog';
-
-import IonicIcon from 'react-native-vector-icons/Ionicons';
+import DatePicker from '../components/DatePicker';
 
 
 
@@ -71,74 +70,6 @@ const FormScreen = () => {
 
     const [disable, setDisable] = useState(true);
 
-    const listProperty = [
-        {
-            label: 'Please Select One',
-            value: '',
-        },
-        {
-            label: 'Building',
-            value: 'Building',
-        },
-        {
-            label: 'Apartment',
-            value: 'Apartment',
-        },
-        {
-            label: 'Flat',
-            value: 'Flat',
-        },
-        {
-            label: 'House',
-            value: 'House',
-        },
-        {
-            label: 'Bugalow',
-            value: 'Bugalow',
-        },
-        {
-            label: 'Villa',
-            value: 'Villa',
-        },
-    ];
-
-    const listBedroomType = [
-        {
-            label: 'Please Select One',
-            value: '',
-        },
-        {
-            label: 'One Bedroom',
-            value: 'Single Room',
-        },
-        {
-            label: 'Two Bedroom',
-            value: 'Two Bedroom',
-        },
-        {
-            label: 'Studio Bedroom',
-            value: 'Studio Bedroom',
-        },
-    ];
-
-    const listFurnitureType = [
-        {
-            label: 'Please Choose One (Optional)',
-            value: '',
-        },
-        {
-            label: 'Furnished',
-            value: 'Furnished',
-        },
-        {
-            label: 'Unfurnished',
-            value: 'Unfurnished',
-        },
-        {
-            label: 'Part Furnished',
-            value: 'Part Furnished',
-        },
-    ];
 
     const showMode = currentMode => {
         setShow(true);
@@ -257,29 +188,15 @@ const FormScreen = () => {
                         isRequired
                     />
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Adding Time</Text>
-                        <TouchableOpacity onPress={showMode}>
-                            <View style={styles.fieldContainer}>
-                                <View style={styles.iconContainer}>
-                                    <IonicIcon name="calendar" size={25} color="#9941ac" />
-                                </View>
-                                <Text style={styles.formInput}>{`${data.addingDate.getDate()}/${data.addingDate.getMonth()}/${data.addingDate.getFullYear()}`}</Text>
-                                <Text style={styles.required}>*</Text>
-                            </View>
-                        </TouchableOpacity>
-                    </View>
-                    {show && (
-                        <DateTimePicker
-                            testID="dateTimePicker"
-                            value={data.addingDate}
-                            mode="date"
-                            is24Hour={true}
-                            display="default"
-                            onChange={onChange}
-                            maximumDate={Date.now()}
-                        />
-                    )}
+                    <DatePicker
+                        showMode={showMode}
+                        onChange={onChange}
+                        date={data.addingDate}
+                        show={show}
+                        label="Adding Date"
+                        isRequired
+                    />
+
                     <InputField
                         name="monthlyRentPrice"
                         handleTextInput={handleTextInput}
@@ -367,7 +284,8 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         height:
-            Dimensions.get('window').height - Dimensions.get('window').height * 0.15,
+            Dimensions.get('window').height - Dimensions.get('window').height * 0.20,
+        marginBottom: 30,
     },
     inputContainer: {
         marginVertical: 10,
@@ -412,24 +330,6 @@ const styles = StyleSheet.create({
         padding: 10,
         textAlign: 'center',
         color: 'white',
-    },
-    required: {
-        color: 'red',
-        position: 'absolute',
-        top: 15,
-        right: 10,
-        fontSize: 25,
-    },
-    iconContainer: {
-        //backgroundColor: '#9941ac',
-        height: 25,
-        width: 25,
-        borderRadius: 50,
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'absolute',
-        top: '38%',
-        left: 10,
     },
 });
 

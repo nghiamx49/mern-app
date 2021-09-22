@@ -17,6 +17,7 @@ const styles = StyleSheet.create({
     btnContainer: {
         width: 350,
         marginTop: 30,
+        marginBottom: 20,
     },
     btnSubmit: {
         borderRadius: 10,

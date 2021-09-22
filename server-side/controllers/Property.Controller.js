@@ -47,14 +47,14 @@ taskRouter.post("/create", authorize.isAdmin, uploadProperty.array('propertyImag
       addingDate,
       monthlyRentPrice,
       furnitureType,
-      notes,
+      notes: notes || "",
       reporterName,
       location: location._id,
       description: "",
     });
 
     const imageArr = req.files.map(async item => {
-      const imageItem = await new PropertyImage({ imageUrl: process.env.DIR_PROPERTIES + item.filename, property: newProperty._id })
+      const imageItem = await new PropertyImage({ imageUrl: (process.env.DIR_PROPERTIES + item.filename), property: newProperty._id })
       await imageItem.save();
       return imageItem;
     })

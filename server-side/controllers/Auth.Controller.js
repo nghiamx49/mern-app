@@ -54,7 +54,7 @@ authRouter.post(
 );
 
 authRouter.post("/register", async (req, res) => {
-  const { username, password, fullname, dateOfBirth } = req.body;
+  const { username, password, fullName, dateOfBirth } = req.body;
   const checkExisted = await User.findOne({ username });
   console.log(req.body);
   if (!checkExisted) {
@@ -62,7 +62,7 @@ authRouter.post("/register", async (req, res) => {
     const newUser = await new User({
       username: username,
       password: password,
-      fullName: fullname,
+      fullName: fullName,
       dateOfBirth: dateOfBirth,
       role: process.env.User,
       avatar: avatar._id

@@ -13,7 +13,7 @@ const DropdownCustom = ({ name, handleTextInput, value, label, data, ...props })
                     <IonicIcon name={props.icon} size={25} color="#9941ac" />
                 </View>}
                 <View style={styles.formInput}>
-                    <Picker onValueChange={(val, index) => handleTextInput(val, name, label)} selectedValue={value} {...props}>
+                    <Picker onValueChange={(val, index) => handleTextInput(val, name, label)} selectedValue={value} mode='dropdown' {...props}>
                         {data.map((item, index) => (
                             <Picker.Item label={item.label} style={{ color: item.value === '' ? 'gray' : 'black' }} value={item.value} key={index} enabled={item.value !== ''} />
                         ))}

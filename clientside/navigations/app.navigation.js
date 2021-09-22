@@ -1,49 +1,98 @@
-import React, { useContext } from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import FormScreen from '../screens/Form';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { NavigationContainer } from '@react-navigation/native';
-import { AuthenticationContext } from '../context/App.Context';
+import React from "react";
+import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
+import FormScreen from "../screens/Form";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import { NavigationContainer } from "@react-navigation/native";
+import { connect } from "react-redux";
 
-import AppAuthenticate from '../screens/Authenticate';
+import AppAuthenticate from "../screens/Authenticate";
+import AccountScreen from "../screens/Account";
+import HomeScreen from "../screens/Home";
 
-const Tab = createBottomTabNavigator();
-
+const Tab = createMaterialBottomTabNavigator();
 
 const AuthenticateNavigation = () => {
-    return (
-        <NavigationContainer>
-            <Tab.Navigator initialRouteName="Form" screenOptions={({ route }) => ({
-                tabBarIcon: ({ focused, color, size }) => {
-                    let iconName;
-
-                    if (route.name === 'Dialog') {
-                        iconName = focused ? 'chatbox' : 'chatbox-outline';
-                    }
-                    else if (route.name === 'Form') {
-                        iconName = focused ? 'reorder-four' : 'reorder-four-outline';
-                    }
-                    return <Ionicons name={iconName} size={size} color={color} />;
-                },
-                tabBarActiveTintColor: '#9941ac',
-                tabBarInactiveTintColor: 'gray',
-                headerShown: false,
-            })}>
-                <Tab.Screen name="Form" component={FormScreen} />
-            </Tab.Navigator>
-        </NavigationContainer>
-    );
+  return (
+    <Tab.Navigator
+      initialRouteName="Home"
+      activeColor="#ffffff"
+      inactiveColor="#d0d0d0"
+      shifting={true}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarColor: "#9941ac",
+          tabBarIcon: ({ focused, color }) => {
+            return (
+              <Ionicons
+                name={focused ? "home-sharp" : "home-outline"}
+                size={25}
+                color={color}
+              />
+            );
+          },
+        }}
+      />
+      {/* <Tab.Screen name="Favorites" component={AccountScreen} options={
+                {
+                    tabBarColor: '#9941ac',
+                    tabBarIcon: ({ focused, color }) => {
+                        return <Ionicons name={focused ? 'star-sharp' : 'star-outline'} size={25} color={color} />;
+                    },
+                }
+            } /> */}
+      <Tab.Screen
+        name="Form"
+        component={FormScreen}
+        options={{
+          tabBarColor: "#00628e",
+          tabBarIcon: ({ focused, color }) => {
+            return (
+              <Ionicons
+                name={
+                  focused ? "file-tray-full-sharp" : "file-tray-full-outline"
+                }
+                size={25}
+                color={color}
+              />
+            );
+          },
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={AccountScreen}
+        options={{
+          tabBarColor: "#9941ac",
+          tabBarIcon: ({ focused, color }) => {
+            return (
+              <Ionicons
+                name={focused ? "person-sharp" : "person-outline"}
+                size={25}
+                color={color}
+              />
+            );
+          },
+        }}
+      />
+    </Tab.Navigator>
+  );
 };
 
-
-const AppNavigation = () => {
-    const { isLoggedIn } = useContext(AuthenticationContext);
-    console.log(isLoggedIn);
-    return (
-        <>
-            {isLoggedIn ? <AuthenticateNavigation /> : <AppAuthenticate />}
-        </>
-    );
+const AppNavigation = ({ isLoggedIn }) => {
+  return (
+    <NavigationContainer>
+      {isLoggedIn ? <AuthenticateNavigation /> : <AppAuthenticate />}
+    </NavigationContainer>
+  );
 };
 
-export default AppNavigation;
+const mapStateToProps = (state) => {
+  return {
+    isLoggedIn: state.authenticationReducer.isLoggedIn,
+  };
+};
+
+export default connect(mapStateToProps)(AppNavigation);
