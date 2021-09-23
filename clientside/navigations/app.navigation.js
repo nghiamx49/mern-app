@@ -1,5 +1,6 @@
 import React from "react";
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
 import FormScreen from "../screens/Form";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { NavigationContainer } from "@react-navigation/native";
@@ -8,6 +9,28 @@ import { connect } from "react-redux";
 import AppAuthenticate from "../screens/Authenticate";
 import AccountScreen from "../screens/Account";
 import HomeScreen from "../screens/Home";
+import PropertyDetailScreen from "../screens/PropertyDetail";
+
+const Stack = createStackNavigator();
+
+const PropertyStack = () => {
+  return (
+    <Stack.Navigator
+      initialRouteName="All"
+      screenOptions={{
+        cardShadowEnabled: true,
+        headerTintColor: "#9941ac",
+      }}
+    >
+      <Stack.Screen
+        name="All"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="Detail" component={PropertyDetailScreen} />
+    </Stack.Navigator>
+  );
+};
 
 const Tab = createMaterialBottomTabNavigator();
 
@@ -21,7 +44,7 @@ const AuthenticateNavigation = () => {
     >
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={PropertyStack}
         options={{
           tabBarColor: "#9941ac",
           tabBarIcon: ({ focused, color }) => {

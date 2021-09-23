@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 import { listProperty } from "../costants";
+import { useFocusEffect } from "@react-navigation/native";
 
 import {
   scrollInterpolators,
@@ -18,7 +19,7 @@ import {
   SafeAreaView,
   Dimensions,
 } from "react-native";
-import Carousel, { getInputRangeFromIndexes } from "react-native-snap-carousel";
+import Carousel from "react-native-snap-carousel";
 import RequestService from "../services/request.service";
 import IoniIcon from "react-native-vector-icons/Ionicons";
 import CategoryItem from "../components/CategoryItem";
@@ -27,7 +28,7 @@ import { connect } from "react-redux";
 
 const { width: screenWidth } = Dimensions.get("window");
 
-const HomeScreen = ({ token }) => {
+const HomeScreen = ({ token, navigation }) => {
   const [searchParam, setSearchParam] = useState("");
 
   const [activeItem, setActiveItem] = useState("");
@@ -36,17 +37,25 @@ const HomeScreen = ({ token }) => {
 
   const [listData, setListData] = useState([]);
 
-  const handleTouched = (value) => {
-    setActiveItem(value);
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await get("/properties/", token);
-      setListData(response.data.data);
-    };
-    fetchData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      const fetchData = async () => {
+        try {
+          const response = await get("/properties/", token);
+          if (isActive) {
+            setListData(response.data.data);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      fetchData();
+      return () => {
+        isActive = false;
+      };
+    }, [token])
+  );
 
   const data = () => {
     let listData = [...listProperty];
@@ -54,12 +63,52 @@ const HomeScreen = ({ token }) => {
     return listData;
   };
 
+  const filter = async (value) => {
+    try {
+      const response = await get(`/properties/?propertyType=${value}`, token);
+      setListData(response.data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleTouched = (value) => {
+    setActiveItem(value);
+    filter(value);
+    setSearchParam("");
+  };
+
+  const search = async (value) => {
+    try {
+      setActiveItem("");
+      setSearchParam(value);
+      const response = await get(`/properties/?address=${value}`, token);
+      setListData(response.data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const debouce = (func, wait) => {
+    let timeout;
+    return function (...args) {
+      const context = this;
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        timeout = null;
+        func.apply(context, args);
+      }, wait);
+    };
+  };
+
+  const searchDebouce = useCallback(debouce(search, 1000), []);
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior="height"
+      behavior="margin"
       enabled
-      keyboardVerticalOffset={30}
+      keyboardVerticalOffset={80}
     >
       <ScrollView>
         <ImageBackground
@@ -74,9 +123,11 @@ const HomeScreen = ({ token }) => {
                 <IoniIcon name="search-sharp" size={25} color="#fff" />
               </View>
               <TextInput
+                defaultValue={searchParam}
                 style={styles.search}
                 placeholder="Search..."
                 placeholderTextColor="#fff"
+                onChangeText={(text) => searchDebouce(text)}
               />
             </View>
           </View>
@@ -102,7 +153,9 @@ const HomeScreen = ({ token }) => {
         <View style={styles.itemContainer}>
           <Carousel
             data={listData}
-            renderItem={({ item, index }) => <PropertyItem item={item} />}
+            renderItem={({ item, index }) => (
+              <PropertyItem item={item} navigation={navigation} />
+            )}
             sliderWidth={screenWidth}
             keyExtractor={(item, index) => index}
             itemWidth={screenWidth - 80}

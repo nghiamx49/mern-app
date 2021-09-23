@@ -1,24 +1,35 @@
 import React from "react";
-import { View, Image, Text, StyleSheet, Dimensions } from "react-native";
+import {
+  View,
+  Image,
+  Text,
+  StyleSheet,
+  Dimensions,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { HOST } from "@env";
 
-const PropertyItem = ({ item }, parallaxProps) => {
+const PropertyItem = ({ item, navigation }, parallaxProps) => {
   const { listImage, monthlyRentPrice, location } = item;
 
   return (
-    <View style={styles.item}>
-      <Image
-        style={styles.itemImg}
-        source={{ uri: HOST + listImage[0].imageUrl.slice(1) }}
-        parallaxFactor={0.4}
-        showSpinner={true}
-        {...parallaxProps}
-      />
-      <View style={styles.itemInfo}>
-        <Text style={styles.address}>{location.address}</Text>
-        <Text style={styles.price}>{`${monthlyRentPrice}$`}</Text>
+    <TouchableWithoutFeedback
+      onPress={() => navigation.navigate("Detail", { item: item })}
+    >
+      <View style={styles.item}>
+        <Image
+          style={styles.itemImg}
+          source={{ uri: HOST + listImage[0].imageUrl.slice(1) }}
+          parallaxFactor={0.4}
+          showSpinner={true}
+          {...parallaxProps}
+        />
+        <View style={styles.itemInfo}>
+          <Text style={styles.address}>{location.address}</Text>
+          <Text style={styles.price}>{`${monthlyRentPrice}$`}</Text>
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
