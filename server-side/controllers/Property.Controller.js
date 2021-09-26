@@ -53,27 +53,32 @@ taskRouter.get("/:id", async (req, res) => {
   });
 });
 
-taskRouter.post(
-  "/create",
-  authorize.isAdmin,
-  uploadProperty.array("propertyImages", 3),
-  async (req, res, next) => {
-    try {
-      const {
-        propertyType,
-        bedRoom,
-        addingDate,
-        monthlyRentPrice,
-        furnitureType,
-        notes,
-        reporterName,
-        address,
-        geocode,
-      } = req.body;
+taskRouter.post("/create", authorize.isAdmin, async (req, res, next) => {
+  try {
+    const {
+      propertyType,
+      bedRoom,
+      addingDate,
+      monthlyRentPrice,
+      furnitureType,
+      notes,
+      reporterName,
+      address,
+      geocode,
+    } = req.body;
 
+    const checkExist = await Location.findOne({ address: address });
+
+    if (checkExist) {
+      res
+        .status(400)
+        .json({ message: "This location is already existed", status: 400 })
+        .end();
+      return;
+    } else {
       const location = await new Location({ address, geocode });
 
-      const newProperty = new Property({
+      const newProperty = await new Property({
         propertyType,
         bedRoom,
         addingDate,
@@ -84,22 +89,40 @@ taskRouter.post(
         location: location._id,
         description: "",
       });
+      await newProperty.save();
+      location.property = newProperty._id;
+      await location.save();
+      res.status(201).json({
+        message: "Create successfully",
+        property: newProperty,
+        status: 201,
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+taskRouter.put(
+  "/append/:id",
+  authorize.isAdmin,
+  uploadProperty.array("propertyImages", 3),
+  async (req, res, next) => {
+    try {
+      const property = await Property.findById(req.params.id);
 
       const imageArr = req.files.map(async (item) => {
         const imageItem = await new PropertyImage({
           imageUrl: process.env.DIR_PROPERTIES + item.filename,
-          property: newProperty._id,
+          property: property._id,
         });
         await imageItem.save();
         return imageItem;
       });
 
       const listImage = await Promise.all(imageArr);
-      newProperty.listImage = listImage;
-      await newProperty.save();
-      location.property = newProperty._id;
-      await location.save();
-      res.json({ message: "Create successfully", status: 201 });
+      property.listImage = listImage;
+      await property.save();
+      res.status(200).json({ message: "Update successfully", status: 200 });
     } catch (error) {
       req.files.map((item) => {
         fs.unlinkSync(process.env.DIR_PROPERTIES + item.filename);

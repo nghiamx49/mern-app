@@ -35,8 +35,8 @@ const DropdownCustom = ({
                 label={item.label}
                 style={{
                   color: item.value === "" ? "gray" : "black",
-                  backgroundColor:
-                    Appearance.getColorScheme() === "dark" ? "#fff" : "#ooo",
+                  // backgroundColor:
+                  //   Appearance.getColorScheme() === "dark" ? "#fff" : "#ooo",
                 }}
                 value={item.value}
                 key={index}

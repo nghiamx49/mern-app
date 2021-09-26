@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { connect } from "react-redux";
 import { launchImageLibrary } from "react-native-image-picker";
 import {
@@ -12,13 +12,12 @@ import {
   Alert,
   Platform,
   Image,
-  PermissionsAndroid,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-
+import CustomDilog from "../components/Dialog";
 import axios from "axios";
 import { MAP_API_KEY } from "@env";
-
+import { useFocusEffect } from "@react-navigation/native";
 import IonicIcon from "react-native-vector-icons/Ionicons";
 import { listBedroomType, listFurnitureType, listProperty } from "../costants/";
 import InputField from "../components/InputField";
@@ -28,7 +27,7 @@ import DatePicker from "../components/DatePicker";
 
 import RequestService from "../services/request.service";
 
-const FormScreen = ({ user }) => {
+const FormScreen = ({ user, token }) => {
   const [data, setData] = useState({
     propertyType: "",
     bedRoom: "",
@@ -41,26 +40,13 @@ const FormScreen = ({ user }) => {
     geocode: "",
   });
 
-  const { create } = RequestService;
+  const { create, update } = RequestService;
 
   const [listImage, setListImage] = useState([]);
 
   const [toggle, setToggle] = useState(false);
 
   const handleToggle = () => {
-    const geocodeFinding = async () => {
-      try {
-        const response = await axios.get(
-          `https://maps.googleapis.com/maps/api/geocode/json?address=${data.address}&key=${MAP_API_KEY}`
-        );
-        console.log(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    if (data.geocode === "") {
-      geocodeFinding();
-    }
     setToggle(!toggle);
   };
 
@@ -93,6 +79,8 @@ const FormScreen = ({ user }) => {
 
   const [disable, setDisable] = useState(true);
 
+  const [errorDialog, setErrorDialog] = useState({ state: false, message: "" });
+
   const showMode = (currentMode) => {
     setShow(true);
   };
@@ -103,13 +91,47 @@ const FormScreen = ({ user }) => {
     setData({ ...data, addingDate: currentDate });
   };
 
-  const handleImagePicker = async () => {
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      const fetchData = () => {
+        try {
+          if (isActive) {
+            setListImage([]);
+            setData({
+              propertyType: "",
+              bedRoom: "",
+              addingDate: new Date(),
+              monthlyRentPrice: "",
+              furnitureType: "",
+              notes: "",
+              reporterName: user.fullName,
+              address: "",
+              geocode: "",
+            });
+            setToggle(false);
+            setErrorDialog({ state: false, message: "" });
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      fetchData();
+      return () => {
+        isActive = false;
+      };
+    }, [token])
+  );
+
+  const handleImagePicker = () => {
     try {
       launchImageLibrary(
         {
           mediaType: "photo",
           noData: true,
           selectionLimit: 3,
+          width: Dimensions.get("screen").width,
+          height: 300,
         },
         (responses) => {
           if (responses.didCancel) {
@@ -174,41 +196,73 @@ const FormScreen = ({ user }) => {
     }
   };
 
-  const createFormData = (listImage, body = {}) => {
-    const data = new FormData();
-
-    listImage.map((item) =>
-      data.append("propertyImages", {
-        name: item.fileName,
-        type: item.type,
-        uri: Platform.OS === "ios" ? item.uri.replace("file://", "") : item.uri,
-      })
+  const handleBlurAddress = async () => {
+    const json = {
+      location: { street: data.address },
+      options: {
+        thumbMaps: false,
+        boundingBox: {
+          ul: {
+            lat: 16.116401,
+            lng: 108.125903,
+          },
+          lr: {
+            lat: 15.913131,
+            lng: 108.333807,
+          },
+        },
+      },
+    };
+    const geoRes = await axios.get(
+      `http://www.mapquestapi.com/geocoding/v1/address?key=${MAP_API_KEY}&inFormat=json&outFormat=json&json=${JSON.stringify(
+        { ...json }
+      )}`
     );
-
-    Object.keys(body).forEach((key) => {
-      data.append(key, body[key]);
-    });
-
-    return data;
+    const { lat, lng } = geoRes.data.results[0].locations[0].latLng;
+    setData({ ...data, geocode: `${lat},${lng}` });
+    console.log("address loaded");
   };
 
   const handleSubmit = async () => {
     try {
-      const formData = createFormData(listImage, data);
-      console.log(formData);
-      // setToggle(!toggle);
-      // Alert.alert("Save Success", "Your property had been added");
-      // setData({
-      //   propertyType: "",
-      //   bedRoom: "",
-      //   addingDate: new Date(),
-      //   monthlyRentPrice: "",
-      //   furnitureType: "",
-      //   notes: "",
-      //   reporterName: "",
-      // });
+      let formData = new FormData();
+      listImage.map((item) =>
+        formData.append("propertyImages", {
+          name: item.fileName,
+          type: item.type,
+          uri:
+            Platform.OS === "ios" ? item.uri.replace("file://", "") : item.uri,
+        })
+      );
+      const response = await create("/properties/create", token, { ...data });
+      console.log(response?.data);
+      if (response?.status !== 201) {
+        setErrorDialog({ state: true, message: response.data.message });
+      } else {
+        const updateImage = await update(
+          `/properties/append/${response.data.property._id}`,
+          token,
+          formData
+        );
+        console.log(updateImage?.status);
+        if (updateImage.status === 200) {
+          setToggle(!toggle);
+          Alert.alert("Save Success", "Your property had been added");
+          setData({
+            propertyType: "",
+            bedRoom: "",
+            addingDate: new Date(),
+            monthlyRentPrice: "",
+            furnitureType: "",
+            notes: "",
+            reporterName: user.fullName,
+            geocode: "",
+          });
+          setListImage([]);
+        }
+      }
     } catch (error) {
-      console.log(error);
+      console.log(error.message);
     }
   };
 
@@ -281,6 +335,7 @@ const FormScreen = ({ user }) => {
             icon={"location-sharp"}
             isRequired
             keyboardAppearance="dark"
+            onBlur={handleBlurAddress}
           />
 
           <DropdownCustom
@@ -320,17 +375,13 @@ const FormScreen = ({ user }) => {
             {listImage.length !== 0 && (
               <View style={styles.previewContainer}>
                 {listImage.map(({ uri }, index) => (
-                  <View style={styles.imageBlock}>
+                  <View key={index} style={styles.imageBlock}>
                     <View style={styles.closeBtn}>
                       <TouchableOpacity onPress={() => handleImgRemove(uri)}>
                         <IonicIcon size={20} name="close-circle-sharp" />
                       </TouchableOpacity>
                     </View>
-                    <Image
-                      key={index}
-                      style={styles.imagePreview}
-                      source={{ uri: uri }}
-                    />
+                    <Image style={styles.imagePreview} source={{ uri: uri }} />
                   </View>
                 ))}
               </View>
@@ -359,6 +410,11 @@ const FormScreen = ({ user }) => {
             toggle={toggle}
             handleSubmit={handleSubmit}
             handleToggle={handleToggle}
+          />
+          <CustomDilog
+            toggle={errorDialog.state}
+            handleToggle={() => setErrorDialog(!errorDialog)}
+            message={errorDialog.message}
           />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -481,6 +537,7 @@ const styles = StyleSheet.create({
 const mapStateToProps = (state) => {
   return {
     user: state.authenticationReducer.user,
+    token: state.authenticationReducer.token,
   };
 };
 

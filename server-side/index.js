@@ -11,11 +11,26 @@ const passportConfig = require("./middleware/Auth.Middleware");
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+app.use(require("cors")());
+
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS, PUT, PATCH, DELETE"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
 app.use(
   cors({
     origin: "*",
     credentials: false,
-  }),
+  })
 );
 
 app.use(passport.initialize());
@@ -25,12 +40,12 @@ app.use(errorhandler());
 app.use(morgan("dev"));
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }))
+app.use(express.urlencoded({ extended: false }));
 app.use(passport.session());
 
 db.connectToDB();
 
-app.use('/statics', express.static('statics'))
+app.use("/statics", express.static("statics"));
 
 app.use("/api/auth", authRouter);
 app.use("/api/properties", propertyRouter);

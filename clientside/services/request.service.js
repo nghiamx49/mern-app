@@ -20,39 +20,40 @@ const authService = {
   },
   create: async (endpoint, token, obj) => {
     try {
-      const response = await axios.post(
-        `${API_PREFIX}${endpoint}`,
-        JSON.stringify({ ...obj }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          validateStatus: (status) => {
-            return status < 500;
-          },
-        }
-      );
+      const response = await axios.post(`${API_PREFIX}${endpoint}`, obj, {
+        timeout: 1000 * 15,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        validateStatus: (status) => {
+          return status <= 500;
+        },
+        onUploadProgress: (progressEvent) => {
+          console.log("waiting");
+        },
+      });
       return response;
     } catch (error) {
-      console.log(error);
+      console.log(error.message);
     }
   },
   update: async (endpoint, token, obj) => {
     try {
-      const response = await axios.put(
-        `${API_PREFIX}${endpoint}`,
-        JSON.stringify({ ...obj }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          validateStatus: (status) => {
-            return status < 500;
-          },
-        }
-      );
+      const response = await axios.put(`${API_PREFIX}${endpoint}`, obj, {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+        validateStatus: (status) => {
+          return status < 500;
+        },
+        onUploadProgress: (progressEvent) => {
+          console.log("waiting");
+        },
+      });
       return response;
     } catch (error) {
       console.log(error);
@@ -77,18 +78,14 @@ const authService = {
   authentication: async (account) => {
     try {
       console.log(API_PREFIX);
-      const response = await axios.post(
-        `${API_PREFIX}/auth/login`,
-        JSON.stringify({ ...account }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          validateStatus: (status) => {
-            return status < 500;
-          },
-        }
-      );
+      const response = await axios.post(`${API_PREFIX}/auth/login`, account, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        validateStatus: (status) => {
+          return status < 500;
+        },
+      });
       return response;
     } catch (error) {
       console.log(error);

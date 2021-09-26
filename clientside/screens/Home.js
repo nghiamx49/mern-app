@@ -1,12 +1,8 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 
 import { listProperty } from "../costants";
 import { useFocusEffect } from "@react-navigation/native";
 
-import {
-  scrollInterpolators,
-  animatedStyles,
-} from "../components/CaroselAnimation";
 import {
   View,
   ImageBackground,
