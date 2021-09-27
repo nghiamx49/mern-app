@@ -5,7 +5,7 @@ const authorize = require("../middleware/Authorize.Middleware");
 const { uploadProperty } = require("../middleware/multer");
 const fs = require("fs");
 
-const { Property, Location, PropertyImage } = db;
+const { Property, Location, PropertyImage, FavoriteList } = db;
 
 taskRouter.use(passport.authenticate("jwt", { session: false }));
 
@@ -42,7 +42,7 @@ taskRouter.get("/", async (req, res) => {
   }
 });
 
-taskRouter.get("/:id", async (req, res) => {
+taskRouter.get("/item/:id", async (req, res) => {
   const task = await Property.findById(req.params.id)
     .populate("listImage", "imageUrl")
     .populate("location");
@@ -51,6 +51,63 @@ taskRouter.get("/:id", async (req, res) => {
     mesError: false,
     data: task,
   });
+});
+
+taskRouter.get("/favorite", authorize.isUser, async (req, res) => {
+  try {
+    const favoriteList = await FavoriteList.find({
+      userId: req.user._id,
+    });
+    const listResponse = favoriteList.map(async ({ itemId }) => {
+      let item = await Property.findById(itemId)
+        .populate("listImage", "imageUrl")
+        .populate("location");
+      return item;
+    });
+
+    let responseList = await Promise.all(listResponse);
+
+    res.status(200).json({
+      data: responseList,
+      message: "All properties in favorite list",
+    });
+  } catch (error) {
+    console.log(error.message);
+  }
+});
+
+taskRouter.post("/favorite/add", authorize.isUser, async (req, res) => {
+  const { itemId } = req.body;
+  const checkExisted = await FavoriteList.findOne({ itemId: itemId });
+  if (checkExisted) {
+    res
+      .status(400)
+      .json({
+        message: "This property already in your favorite lists",
+        status: 400,
+      })
+      .end();
+  } else {
+    const item = await Property.findById(itemId);
+    const newItem = await new FavoriteList({
+      userId: req.user._id,
+      itemId: item._id,
+    });
+    await newItem.save();
+    res
+      .status(201)
+      .json({ message: "Property added successfully", status: 201 })
+      .end();
+  }
+});
+
+taskRouter.delete("/favorite/:itemId", authorize.isUser, async (req, res) => {
+  const { itemId } = req.params;
+  await FavoriteList.findOneAndDelete({ itemId: itemId });
+  res
+    .status(200)
+    .json({ message: "Property removed successfully", status: 200 })
+    .end();
 });
 
 taskRouter.post("/create", authorize.isAdmin, async (req, res, next) => {

@@ -40,7 +40,8 @@ const styles = StyleSheet.create({
   },
   itemText: {
     color: Appearance.getColorScheme() === "dark" ? "#fff" : "black",
-    marginRight: 10,
+    maxWidth: 350,
+    textAlign: "center",
   },
   fieldContainer: {
     position: "relative",

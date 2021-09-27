@@ -3,9 +3,10 @@ const db = {};
 
 const user = require("../models/User.Model");
 const property = require("../models/Property.Model");
-const propertyImg = require('../models/PropertyImage.Model');
-const avatar = require('../models/Avatar.Model');
-const location = require('../models/Location.Model')
+const propertyImg = require("../models/PropertyImage.Model");
+const avatar = require("../models/Avatar.Model");
+const location = require("../models/Location.Model");
+const favoriteList = require("../models/FavoriteList.Model");
 
 mongoose.Promise = global.Promise;
 
@@ -16,9 +17,9 @@ db.Property = property;
 db.PropertyImage = propertyImg;
 db.Avatar = avatar;
 db.Location = location;
+db.FavoriteList = favoriteList;
 
 const User = db.User;
-const Property = db.Property;
 const Avatar = db.Avatar;
 
 db.connectToDB = async () => {

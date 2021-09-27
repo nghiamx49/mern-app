@@ -1,6 +1,6 @@
-import React, { useCallback, useState, useRef } from "react";
+import React, { useCallback, useState } from "react";
 
-import { listProperty } from "../costants";
+import { listProperty } from "../../costants";
 import { useFocusEffect } from "@react-navigation/native";
 
 import {
@@ -14,24 +14,22 @@ import {
   FlatList,
   SafeAreaView,
   Dimensions,
-  Alert,
 } from "react-native";
 import Carousel from "react-native-snap-carousel";
-import RequestService from "../services/request.service";
+import RequestService from "../../services/request.service";
 import IoniIcon from "react-native-vector-icons/Ionicons";
-import CategoryItem from "../components/CategoryItem";
-import PropertyItem from "../components/PropertyItem";
+import CategoryItem from "../../components/CategoryItem";
+import PropertyItem from "../../components/PropertyItem";
 import { connect } from "react-redux";
 
 const { width: screenWidth } = Dimensions.get("window");
 
-const HomeScreen = ({ token, navigation }) => {
+const AdminHomeScreen = ({ token, navigation }) => {
   const [searchParam, setSearchParam] = useState("");
 
-  const ref = useRef();
   const [activeItem, setActiveItem] = useState("");
 
-  const { get, create } = RequestService;
+  const { get } = RequestService;
 
   const [listData, setListData] = useState([]);
 
@@ -43,7 +41,6 @@ const HomeScreen = ({ token, navigation }) => {
           const response = await get("/properties/", token);
           if (isActive) {
             setListData(response.data.data);
-            ref?.current?.scrollToOffset({ animated: true, offset: 0 });
           }
         } catch (error) {
           console.log(error);
@@ -75,16 +72,6 @@ const HomeScreen = ({ token, navigation }) => {
     setActiveItem(value);
     filter(value);
     setSearchParam("");
-  };
-
-  const handleAdd = async (id) => {
-    const response = await create("/properties/favorite/add", token, {
-      itemId: id,
-    });
-    Alert.alert(
-      response?.status === 201 ? "Success" : "Error",
-      response.data.message
-    );
   };
 
   const search = async (value) => {
@@ -122,7 +109,7 @@ const HomeScreen = ({ token, navigation }) => {
       <ScrollView>
         <ImageBackground
           resizeMode="cover"
-          source={require("../assets/images/banner.jpg")}
+          source={require("../../assets/images/banner.jpg")}
           style={styles.header}
         >
           <View style={styles.titleContainer}>
@@ -144,7 +131,6 @@ const HomeScreen = ({ token, navigation }) => {
         <Text style={styles.sectionTitle}>Type of Properties</Text>
         <SafeAreaView style={styles.categories}>
           <FlatList
-            ref={ref}
             horizontal={true}
             showsHorizontalScrollIndicator={false}
             data={data()}
@@ -163,13 +149,8 @@ const HomeScreen = ({ token, navigation }) => {
         <View style={styles.itemContainer}>
           <Carousel
             data={listData}
-            loop={true}
             renderItem={({ item, index }) => (
-              <PropertyItem
-                item={item}
-                navigation={navigation}
-                handleAdd={handleAdd}
-              />
+              <PropertyItem item={item} navigation={navigation} />
             )}
             sliderWidth={screenWidth}
             keyExtractor={(item, index) => index}
@@ -246,4 +227,4 @@ const mapStateToProps = (state) => {
   };
 };
 
-export default connect(mapStateToProps)(HomeScreen);
+export default connect(mapStateToProps)(AdminHomeScreen);

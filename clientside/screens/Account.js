@@ -23,6 +23,7 @@ const { width: screenWidth } = Dimensions.get("window");
 
 const AccountScreen = ({ user, handleLogout, token, changeAvatar }) => {
   const { username, fullName, dateOfBirth } = user;
+  let formatDate = new Date(dateOfBirth);
 
   const [avt, setAvt] = useState({});
 
@@ -72,7 +73,6 @@ const AccountScreen = ({ user, handleLogout, token, changeAvatar }) => {
       console.log(error);
     }
   };
-  console.log(user.avatar);
 
   return (
     <Animatable.View
@@ -100,7 +100,7 @@ const AccountScreen = ({ user, handleLogout, token, changeAvatar }) => {
           <Text style={styles.title}>{fullName}</Text>
           <Text style={styles.paragraph}>{username}</Text>
           <Text style={styles.paragraph}>
-            {new Date(dateOfBirth).toLocaleDateString("vn-VN")}
+            {`${formatDate.getDate()}/${formatDate.getMonth()}/${formatDate.getFullYear()}`}
           </Text>
           {avt?.uri && (
             <View style={styles.handleContainer}>

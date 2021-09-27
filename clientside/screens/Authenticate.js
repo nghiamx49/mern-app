@@ -91,7 +91,7 @@ const AppAuthenticate = () => {
             </View>
           </View>
         </LinearGradient>
-        {switchTab === "login" ? <LoginForm /> : <RegisterForm />}
+        {switchTab === "login" ? <LoginForm /> : <RegisterForm setSwitchTab={setSwitchTab} />}
       </ScrollView>
     </KeyboardAvoidingView>
   );

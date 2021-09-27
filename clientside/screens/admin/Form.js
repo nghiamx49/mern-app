@@ -14,18 +14,18 @@ import {
   Image,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-import CustomDilog from "../components/Dialog";
+import CustomDilog from "../../components/Dialog";
 import axios from "axios";
 import { MAP_API_KEY } from "@env";
 import { useFocusEffect } from "@react-navigation/native";
 import IonicIcon from "react-native-vector-icons/Ionicons";
-import { listBedroomType, listFurnitureType, listProperty } from "../costants/";
-import InputField from "../components/InputField";
-import DropdownCustom from "../components/Dropdown";
-import ConfirmDialog from "../components/ConfirmDialog";
-import DatePicker from "../components/DatePicker";
+import { listBedroomType, listFurnitureType, listProperty } from "../../costants";
+import InputField from "../../components/InputField";
+import DropdownCustom from "../../components/Dropdown";
+import ConfirmDialog from "../../components/ConfirmDialog";
+import DatePicker from "../../components/DatePicker";
 
-import RequestService from "../services/request.service";
+import RequestService from "../../services/request.service";
 
 const FormScreen = ({ user, token }) => {
   const [data, setData] = useState({
