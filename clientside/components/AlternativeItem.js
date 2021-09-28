@@ -5,15 +5,34 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  TouchableWithoutFeedback,
   Alert,
+  ScrollView,
+  TouchableOpacity,
+  Animated,
 } from "react-native";
 import { HOST } from "@env";
-import { TouchableOpacity } from "react-native-gesture-handler";
 import IonicIcon from "react-native-vector-icons/Ionicons";
 
-const AlternativeItem = ({ item, navigation, handleEdit, handleRemove }) => {
+const AlternativeItem = ({
+  item,
+  navigation,
+  handleEdit,
+  handleRemove,
+  handleAddNote,
+}) => {
   const { listImage, monthlyRentPrice, location } = item;
+
+  const defaultImageAnimated = new Animated.Value(0),
+    imageAnimated = new Animated.Value(0);
+
+  const handleDefaultImageLoaded = Animated.timing(defaultImageAnimated, {
+    toValue: 1,
+    useNativeDriver: true,
+  }).start();
+  const handleImageAnimagted = Animated.timing(imageAnimated, {
+    toValue: 1,
+    useNativeDriver: true,
+  }).start();
 
   const alertOnPress = () => {
     Alert.alert("Confirm", "Are you sure to delete this item?", [
@@ -36,11 +55,22 @@ const AlternativeItem = ({ item, navigation, handleEdit, handleRemove }) => {
         onPress={() => navigation.navigate("Detail", { item: item })}
       >
         <View>
-          <Image
-            style={styles.itemImg}
+          <Animated.Image
+            source={require("../assets/images/default.jpg")}
+            style={[styles.itemImg, { opacity: defaultImageAnimated }]}
+            parallaxFactor={0.4}
+            onLoad={handleDefaultImageLoaded}
+            blurRadius={1}
+          />
+          <Animated.Image
             source={{ uri: HOST + listImage[0].imageUrl.slice(1) }}
             parallaxFactor={0.4}
-            showSpinner={true}
+            style={[
+              styles.itemImg,
+              { opacity: imageAnimated },
+              styles.imageOverlay,
+            ]}
+            onLoad={handleDefaultImageLoaded}
           />
           <View style={styles.itemInfo}>
             <Text style={styles.address}>{location.address}</Text>
@@ -49,32 +79,49 @@ const AlternativeItem = ({ item, navigation, handleEdit, handleRemove }) => {
         </View>
       </TouchableOpacity>
       <View style={styles.buttonContainer}>
-        {handleEdit && (
-          <TouchableOpacity>
-            <View style={styles.iconEdit}>
-              <IonicIcon
-                name={"create-sharp"}
-                size={30}
-                color="#fff"
-                style={styles.icon}
-              />
-              <Text style={styles.textBtn}>Edit</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-        {handleRemove && (
-          <TouchableOpacity onPress={alertOnPress}>
-            <View style={styles.iconRemove}>
-              <IonicIcon
-                name={"trash-sharp"}
-                size={30}
-                color="#fff"
-                style={styles.icon}
-              />
-              <Text style={styles.textBtn}>Remove</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        <ScrollView horizontal={true}>
+          {handleAddNote && (
+            <TouchableOpacity onPress={() => handleAddNote(item)}>
+              <View style={styles.iconNote}>
+                <IonicIcon
+                  name={"clipboard"}
+                  size={30}
+                  color="#fff"
+                  style={styles.icon}
+                />
+                <Text style={styles.textBtn}>
+                  {item?.description === "" ? "Add" : "Edit"} Description
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          {handleEdit && (
+            <TouchableOpacity onPress={() => handleEdit(item)}>
+              <View style={styles.iconEdit}>
+                <IonicIcon
+                  name={"create-sharp"}
+                  size={30}
+                  color="#fff"
+                  style={styles.icon}
+                />
+                <Text style={styles.textBtn}>Edit</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          {handleRemove && (
+            <TouchableOpacity onPress={alertOnPress}>
+              <View style={styles.iconRemove}>
+                <IonicIcon
+                  name={"trash-sharp"}
+                  size={30}
+                  color="#fff"
+                  style={styles.icon}
+                />
+                <Text style={styles.textBtn}>Remove</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
       </View>
     </View>
   );
@@ -108,7 +155,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   buttonContainer: {
-    padding: 10,
     flexDirection: "row",
     justifyContent: "flex-end",
   },
@@ -126,6 +172,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  iconNote: {
+    backgroundColor: "#b1cb00",
+    marginRight: 10,
+    borderRadius: 50,
+    flexDirection: "row",
+    alignItems: "center",
+  },
   icon: {
     paddingVertical: 5,
     paddingLeft: 10,
@@ -134,6 +187,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     paddingVertical: 5,
     paddingRight: 10,
+  },
+  imageOverlay: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    right: 0,
+    left: 0,
   },
 });
 

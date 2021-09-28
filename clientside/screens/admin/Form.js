@@ -12,6 +12,7 @@ import {
   Alert,
   Platform,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import CustomDilog from "../../components/Dialog";
@@ -19,7 +20,11 @@ import axios from "axios";
 import { MAP_API_KEY } from "@env";
 import { useFocusEffect } from "@react-navigation/native";
 import IonicIcon from "react-native-vector-icons/Ionicons";
-import { listBedroomType, listFurnitureType, listProperty } from "../../costants";
+import {
+  listBedroomType,
+  listFurnitureType,
+  listProperty,
+} from "../../costants";
 import InputField from "../../components/InputField";
 import DropdownCustom from "../../components/Dropdown";
 import ConfirmDialog from "../../components/ConfirmDialog";
@@ -39,6 +44,8 @@ const FormScreen = ({ user, token }) => {
     address: "",
     geocode: "",
   });
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const { create, update } = RequestService;
 
@@ -225,6 +232,8 @@ const FormScreen = ({ user, token }) => {
 
   const handleSubmit = async () => {
     try {
+      setIsLoading(true);
+      setToggle(!toggle);
       let formData = new FormData();
       listImage.map((item) =>
         formData.append("propertyImages", {
@@ -237,6 +246,7 @@ const FormScreen = ({ user, token }) => {
       const response = await create("/properties/create", token, { ...data });
       console.log(response?.data);
       if (response?.status !== 201) {
+        setToggle(!toggle);
         setErrorDialog({ state: true, message: response.data.message });
       } else {
         const updateImage = await update(
@@ -246,7 +256,7 @@ const FormScreen = ({ user, token }) => {
         );
         console.log(updateImage?.status);
         if (updateImage.status === 200) {
-          setToggle(!toggle);
+          setIsLoading(false);
           Alert.alert("Save Success", "Your property had been added");
           setData({
             propertyType: "",
@@ -276,6 +286,11 @@ const FormScreen = ({ user, token }) => {
       colors={["#ff00fe", "#9941ac", "#65056b"]}
       style={styles.linearContainer}
     >
+      {isLoading && (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+      )}
       <Text style={styles.title}>Rental Form</Text>
       <KeyboardAvoidingView
         style={styles.form}
@@ -427,6 +442,14 @@ const styles = StyleSheet.create({
     height: 300,
     alignItems: "center",
     justifyContent: "flex-start",
+  },
+  loading: {
+    height: Dimensions.get("screen").height,
+    width: Dimensions.get("screen").width,
+    position: "absolute",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    zIndex: 100,
+    justifyContent: "center",
   },
   title: {
     fontSize: 20,

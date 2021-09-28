@@ -29,6 +29,7 @@ const DropdownCustom = ({
             {...props}
             dropdownIconColor="#000"
             dropdownIconRippleColor="#000"
+            enabled={props?.enabled}
           >
             {data.map((item, index) => (
               <Picker.Item

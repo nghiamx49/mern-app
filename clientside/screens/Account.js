@@ -7,8 +7,12 @@ import {
   Dimensions,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
+  PermissionsAndroid,
+  Animated,
 } from "react-native";
 import { connect } from "react-redux";
+import SpashScreen from "react-native-splash-screen";
 import SettingOption from "../components/SettingOption";
 import { logout } from "../actions/auth";
 import * as Animatable from "react-native-animatable";
@@ -25,10 +29,32 @@ const AccountScreen = ({ user, handleLogout, token, changeAvatar }) => {
   const { username, fullName, dateOfBirth } = user;
   let formatDate = new Date(dateOfBirth);
 
+  const defaultImageAnimated = new Animated.Value(0),
+    imageAnimated = new Animated.Value(0);
+
+  const handleDefaultImageLoaded = Animated.timing(defaultImageAnimated, {
+    toValue: 1,
+    useNativeDriver: true,
+  }).start();
+  const handleImageAnimagted = Animated.timing(imageAnimated, {
+    toValue: 1,
+    useNativeDriver: true,
+  }).start();
+
   const [avt, setAvt] = useState({});
 
-  const handleImagePicker = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleImagePicker = async () => {
     try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        granted = await PermissionsAndroid.replace(
+          PermissionsAndroid.PERMISSIONS.CAMERA
+        );
+      }
       launchCamera(
         {
           mediaType: "photo",
@@ -39,6 +65,7 @@ const AccountScreen = ({ user, handleLogout, token, changeAvatar }) => {
           if (responses.didCancel) {
             setAvt({});
           } else {
+            console.log(responses.assets);
             setAvt(responses.assets[0]);
           }
         }
@@ -56,17 +83,18 @@ const AccountScreen = ({ user, handleLogout, token, changeAvatar }) => {
 
   const handleSaveChange = async () => {
     try {
+      setIsLoading(true);
       const formData = new FormData();
       formData.append("avatar", {
         name: avt.fileName,
         type: avt.type,
         uri: Platform.OS === "ios" ? avt.uri.replace("file://", "") : avt.uri,
       });
-      console.log(formData._parts);
       const response = await update("/auth/update_avatar", token, formData);
       if (response?.status === 200) {
         await changeAvatar(response.data.updateAvt);
         setAvt({});
+        setIsLoading(false);
         Alert.alert("Success", "Avatar Updated");
       }
     } catch (error) {
@@ -86,7 +114,13 @@ const AccountScreen = ({ user, handleLogout, token, changeAvatar }) => {
         style={styles.backdrop}
       />
       <View style={styles.infoContainer}>
-        <Image
+        <Animated.Image
+          source={require("../assets/images/default.jpg")}
+          style={[styles.avt, { opacity: defaultImageAnimated }]}
+          onLoad={handleDefaultImageLoaded}
+          blurRadius={1}
+        />
+        <Animated.Image
           source={
             avt?.uri
               ? { uri: avt.uri }
@@ -94,7 +128,12 @@ const AccountScreen = ({ user, handleLogout, token, changeAvatar }) => {
               ? { uri: HOST + user.avatar }
               : require("../assets/images/avatar.png")
           }
-          style={styles.avt}
+          style={[
+            styles.avt,
+            { opacity: defaultImageAnimated },
+            styles.avtOverlay,
+          ]}
+          onLoad={handleDefaultImageLoaded}
         />
         <View style={styles.accountDetail}>
           <Text style={styles.title}>{fullName}</Text>
@@ -123,14 +162,31 @@ const AccountScreen = ({ user, handleLogout, token, changeAvatar }) => {
         <SettingOption
           icon="log-out-sharp"
           title="Logout"
-          handlePress={() => handleLogout()}
+          handlePress={() => {
+            SpashScreen.show();
+            handleLogout();
+          }}
         />
       </View>
+      {isLoading && (
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+      )}
     </Animatable.View>
   );
 };
 
 const styles = StyleSheet.create({
+  loading: {
+    height: Dimensions.get("screen").height,
+    width: Dimensions.get("screen").width,
+    position: "absolute",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    zIndex: 10,
+    elevation: 10,
+    justifyContent: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "white",
@@ -153,7 +209,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     shadowOffset: { width: 0, height: 2 },
-    zIndex: 10,
+    zIndex: 5,
     elevation: 5,
     borderRadius: 20,
     height: 150,
@@ -196,6 +252,10 @@ const styles = StyleSheet.create({
   },
   handleContainer: {
     flexDirection: "row",
+  },
+  avtOverlay: {
+    position: "absolute",
+    bottom: "18%",
   },
 });
 

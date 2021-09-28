@@ -1,8 +1,8 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useRef } from "react";
 
 import { listProperty } from "../../costants";
 import { useFocusEffect } from "@react-navigation/native";
-
+import SplashScreen from "react-native-splash-screen";
 import {
   View,
   ImageBackground,
@@ -15,32 +15,42 @@ import {
   SafeAreaView,
   Dimensions,
 } from "react-native";
-import Carousel from "react-native-snap-carousel";
 import RequestService from "../../services/request.service";
 import IoniIcon from "react-native-vector-icons/Ionicons";
 import CategoryItem from "../../components/CategoryItem";
-import PropertyItem from "../../components/PropertyItem";
 import { connect } from "react-redux";
+import AlternativeItem from "../../components/AlternativeItem";
 
-const { width: screenWidth } = Dimensions.get("window");
+import CustomDialog from "../../components/Dialog";
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 const AdminHomeScreen = ({ token, navigation }) => {
   const [searchParam, setSearchParam] = useState("");
 
   const [activeItem, setActiveItem] = useState("");
 
-  const { get } = RequestService;
+  const { get, remove } = RequestService;
+  const [dialog, setDialog] = useState({ status: false, message: "" });
 
   const [listData, setListData] = useState([]);
+  const flatlistRef = useRef();
+
+  const getData = async () => {
+    const response = await get("/properties/", token);
+    setListData(response.data.data);
+  };
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
       const fetchData = async () => {
         try {
-          const response = await get("/properties/", token);
           if (isActive) {
-            setListData(response.data.data);
+            SplashScreen.hide();
+            getData();
+            flatlistRef?.current?.scrollToOffset({ animated: true, offset: 0 });
+            setActiveItem("");
           }
         } catch (error) {
           console.log(error);
@@ -97,6 +107,30 @@ const AdminHomeScreen = ({ token, navigation }) => {
     };
   };
 
+  const handleEdit = (item) => {
+    navigation.navigate("Edit", {
+      item: item,
+      token: token,
+      navigation: navigation,
+    });
+  };
+
+  const handleAddNote = async (item) => {
+    navigation.navigate("Description", { item: item, token: token });
+  };
+
+  const handleRemove = async (id) => {
+    try {
+      const response = await remove(`/properties/remove/${id}`, token);
+      setDialog({ status: true, message: response.data.message });
+      if (response?.status === 200) {
+        getData();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const searchDebouce = useCallback(debouce(search, 1000), []);
 
   return (
@@ -106,59 +140,66 @@ const AdminHomeScreen = ({ token, navigation }) => {
       enabled
       keyboardVerticalOffset={80}
     >
-      <ScrollView>
-        <ImageBackground
-          resizeMode="cover"
-          source={require("../../assets/images/banner.jpg")}
-          style={styles.header}
-        >
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>Rental Z:</Text>
-            <View style={styles.searchForm}>
-              <View style={styles.searchIcon}>
-                <IoniIcon name="search-sharp" size={25} color="#fff" />
-              </View>
-              <TextInput
-                defaultValue={searchParam}
-                style={styles.search}
-                placeholder="Search..."
-                placeholderTextColor="#fff"
-                onChangeText={(text) => searchDebouce(text)}
-              />
+      <ImageBackground
+        resizeMode="cover"
+        source={require("../../assets/images/banner.jpg")}
+        style={styles.header}
+      >
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Rental Z:</Text>
+          <View style={styles.searchForm}>
+            <View style={styles.searchIcon}>
+              <IoniIcon name="search-sharp" size={25} color="#fff" />
             </View>
+            <TextInput
+              defaultValue={searchParam}
+              style={styles.search}
+              placeholder="Search..."
+              placeholderTextColor="#fff"
+              onChangeText={(text) => searchDebouce(text)}
+            />
           </View>
-        </ImageBackground>
-        <Text style={styles.sectionTitle}>Type of Properties</Text>
-        <SafeAreaView style={styles.categories}>
-          <FlatList
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-            data={data()}
-            renderItem={({ item }) => (
-              <CategoryItem
-                activeItem={activeItem}
-                value={item.value}
-                handleTouched={handleTouched}
-                label={item.label}
-              />
-            )}
-            key={(item, index) => index}
-          />
-        </SafeAreaView>
-        <Text style={styles.sectionTitle}>Properies List</Text>
-        <View style={styles.itemContainer}>
-          <Carousel
-            data={listData}
-            renderItem={({ item, index }) => (
-              <PropertyItem item={item} navigation={navigation} />
-            )}
-            sliderWidth={screenWidth}
-            keyExtractor={(item, index) => index}
-            itemWidth={screenWidth - 80}
-            hasParallaxImages={true}
-          />
         </View>
-      </ScrollView>
+      </ImageBackground>
+      <Text style={styles.sectionTitle}>Type of Properties</Text>
+      <SafeAreaView style={styles.categories}>
+        <FlatList
+          ref={flatlistRef}
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          data={data()}
+          renderItem={({ item }) => (
+            <CategoryItem
+              activeItem={activeItem}
+              value={item.value}
+              handleTouched={handleTouched}
+              label={item.label}
+            />
+          )}
+          key={(item, index) => index}
+        />
+      </SafeAreaView>
+      <Text style={styles.sectionTitle}>Properies List</Text>
+      <FlatList
+        ref={flatlistRef}
+        style={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        data={listData}
+        renderItem={({ item }) => (
+          <AlternativeItem
+            item={item}
+            navigation={navigation}
+            handleAddNote={handleAddNote}
+            handleEdit={handleEdit}
+            handleRemove={handleRemove}
+          />
+        )}
+      />
+      <CustomDialog
+        toggle={dialog.status}
+        message={dialog.message}
+        handleToggle={() => setDialog({ status: !dialog.status, message: "" })}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -173,7 +214,8 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     backgroundColor: "rgba(219, 54, 186, 0.6)",
-    padding: 40,
+    height: 150,
+    alignItems: "center",
   },
   title: {
     fontWeight: "700",
@@ -186,7 +228,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     position: "relative",
-    width: "100%",
+    width: "80%",
   },
   search: {
     borderBottomColor: "#fff",
@@ -218,6 +260,10 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     marginVertical: 10,
+  },
+  listContainer: {
+    marginHorizontal: 30,
+    height: screenHeight,
   },
 });
 

@@ -15,9 +15,9 @@ const ConfirmDialog = ({ toggle, handleSubmit, handleToggle, data }) => {
               <Text style={styles.itemText}>{`${item}:`}</Text>
               <Text style={styles.itemText}>
                 {data[item] instanceof Date
-                  ? `${data[item].getDate()}/${data[item].getMonth()}/${data[
-                      item
-                    ].getFullYear()}`
+                  ? `${data[item].getDate()}/${
+                      data[item].getMonth() + 1
+                    }/${data[item].getFullYear()}`
                   : data[item].toString()}
               </Text>
             </View>

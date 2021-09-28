@@ -2,7 +2,7 @@ import React from "react";
 import {
   View,
   Text,
-  Image,
+  Animated,
   StyleSheet,
   Dimensions,
   ScrollView,
@@ -27,7 +27,19 @@ const PropertyDetailScreen = ({ route }) => {
       location: { address, geocode },
     },
   } = route.params;
-  console.log(geocode);
+
+  const defaultImageAnimated = new Animated.Value(0),
+    imageAnimated = new Animated.Value(0);
+
+  const handleDefaultImageLoaded = Animated.timing(defaultImageAnimated, {
+    toValue: 1,
+    useNativeDriver: true,
+  }).start();
+  const handleImageAnimagted = Animated.timing(imageAnimated, {
+    toValue: 1,
+    useNativeDriver: true,
+  }).start();
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -59,11 +71,23 @@ const PropertyDetailScreen = ({ route }) => {
             loop={true}
           >
             {listImage.map((item, key) => (
-              <Image
-                key={key}
-                source={{ uri: HOST + item.imageUrl.slice(1) }}
-                style={styles.img}
-              />
+              <View key={key}>
+                <Animated.Image
+                  source={require("../assets/images/default.jpg")}
+                  style={[styles.img, { opacity: defaultImageAnimated }]}
+                  onLoad={handleDefaultImageLoaded}
+                  blurRadius={1}
+                />
+                <Animated.Image
+                  source={{ uri: HOST + item.imageUrl.slice(1) }}
+                  style={[
+                    styles.img,
+                    { opacity: imageAnimated },
+                    styles.imageOverlay,
+                  ]}
+                  onLoad={handleDefaultImageLoaded}
+                />
+              </View>
             ))}
           </Swiper>
         </View>
@@ -152,6 +176,13 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
+  },
+  imageOverlay: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    right: 0,
+    left: 0,
   },
 });
 

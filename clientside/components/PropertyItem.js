@@ -1,7 +1,7 @@
 import React from "react";
 import {
   View,
-  Image,
+  Animated,
   Text,
   StyleSheet,
   Dimensions,
@@ -14,18 +14,41 @@ import IonicIcon from "react-native-vector-icons/Ionicons";
 const PropertyItem = ({ item, navigation, handleAdd }, parallaxProps) => {
   const { listImage, monthlyRentPrice, location } = item;
 
+  const defaultImageAnimated = new Animated.Value(0),
+    imageAnimated = new Animated.Value(0);
+
+  const handleDefaultImageLoaded = Animated.timing(defaultImageAnimated, {
+    toValue: 1,
+    useNativeDriver: true,
+  }).start();
+  const handleImageAnimagted = Animated.timing(imageAnimated, {
+    toValue: 1,
+    useNativeDriver: true,
+  }).start();
+
   return (
     <View style={styles.item}>
       <TouchableOpacity
         onPress={() => navigation.navigate("Detail", { item: item })}
       >
         <View>
-          <Image
-            style={styles.itemImg}
+          <Animated.Image
+            source={require("../assets/images/default.jpg")}
+            style={[styles.itemImg, { opacity: defaultImageAnimated }]}
+            parallaxFactor={0.4}
+            onLoad={handleDefaultImageLoaded}
+            blurRadius={1}
+          />
+          <Animated.Image
+            style={[
+              styles.itemImg,
+              { opacity: imageAnimated },
+              styles.imageOverlay,
+            ]}
             source={{ uri: HOST + listImage[0].imageUrl.slice(1) }}
             parallaxFactor={0.4}
-            showSpinner={true}
             {...parallaxProps}
+            onLoad={handleDefaultImageLoaded}
           />
           <View style={styles.itemInfo}>
             <Text style={styles.address}>{location.address}</Text>
@@ -82,6 +105,13 @@ const styles = StyleSheet.create({
   btnText: {
     color: "#fff",
     fontWeight: "600",
+  },
+  imageOverlay: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    right: 0,
+    left: 0,
   },
 });
 export default PropertyItem;

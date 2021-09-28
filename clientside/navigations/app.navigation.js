@@ -12,6 +12,8 @@ import HomeScreen from "../screens/Home";
 import PropertyDetailScreen from "../screens/PropertyDetail";
 import AdminHomeScreen from "../screens/admin/Home";
 import FavoriteListScreen from "../screens/FavoriteList";
+import EditFormScreen from "../screens/admin/EditForm";
+import AddDescriptionScreen from "../screens/admin/Description";
 
 const UserStack = createStackNavigator();
 
@@ -70,10 +72,12 @@ const AdminHomeStack = () => {
     >
       <AdminStack.Screen
         name="All"
-        component={HomeScreen}
+        component={AdminHomeScreen}
         options={{ headerShown: false }}
       />
       <AdminStack.Screen name="Detail" component={PropertyDetailScreen} />
+      <AdminStack.Screen name="Edit" component={EditFormScreen} />
+      <AdminStack.Screen name="Description" component={AddDescriptionScreen} />
     </AdminStack.Navigator>
   );
 };

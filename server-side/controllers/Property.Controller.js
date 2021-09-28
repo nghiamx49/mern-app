@@ -13,7 +13,8 @@ taskRouter.get("/", async (req, res) => {
   if (req.query.address !== undefined) {
     const listTask = await Property.find()
       .populate("listImage", "imageUrl")
-      .populate("location");
+      .populate("location")
+      .sort({ addingDate: 1 });
     let result = listTask.filter((item) =>
       item.location.address
         .toLowerCase()
@@ -213,6 +214,7 @@ taskRouter.delete("/remove/:id", authorize.isAdmin, async (req, res) => {
     fs.unlinkSync(item.imageUrl);
   });
   await PropertyImage.deleteMany({ property: req.params.id });
+  await FavoriteList.deleteMany({ itemId: req.params.id });
   await Property.deleteOne({ _id: req.params.id });
   res.json({ message: "Delete successfully", status: 200 });
 });

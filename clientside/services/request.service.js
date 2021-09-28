@@ -30,9 +30,6 @@ const authService = {
         validateStatus: (status) => {
           return status <= 500;
         },
-        onUploadProgress: (progressEvent) => {
-          console.log("waiting");
-        },
       });
       return response;
     } catch (error) {
@@ -51,7 +48,27 @@ const authService = {
           return status < 500;
         },
         onUploadProgress: (progressEvent) => {
-          console.log("waiting");
+          let percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          console.log(percentCompleted);
+        },
+      });
+      return response;
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  edit: async (endpoint, token, obj) => {
+    try {
+      const response = await axios.put(`${API_PREFIX}${endpoint}`, obj, {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        validateStatus: (status) => {
+          return status < 500;
         },
       });
       return response;

@@ -17,6 +17,7 @@ import {
   Alert,
 } from "react-native";
 import Carousel from "react-native-snap-carousel";
+import SplashScreen from "react-native-splash-screen";
 import RequestService from "../services/request.service";
 import IoniIcon from "react-native-vector-icons/Ionicons";
 import CategoryItem from "../components/CategoryItem";
@@ -42,6 +43,7 @@ const HomeScreen = ({ token, navigation }) => {
         try {
           const response = await get("/properties/", token);
           if (isActive) {
+            SplashScreen.hide();
             setListData(response.data.data);
             ref?.current?.scrollToOffset({ animated: true, offset: 0 });
           }

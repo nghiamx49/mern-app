@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   KeyboardAvoidingView,
   Text,
@@ -8,6 +8,8 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import * as Animatable from "react-native-animatable";
+import SplashScreen from "react-native-splash-screen";
+
 import LinearGradient from "react-native-linear-gradient";
 import IonicIcon from "react-native-vector-icons/Ionicons";
 
@@ -20,6 +22,10 @@ const AppAuthenticate = () => {
   const loginRef = useRef(null);
 
   const registerRef = useRef(null);
+
+  useEffect(() => {
+    SplashScreen.hide();
+  }, []);
 
   return (
     <KeyboardAvoidingView
@@ -91,7 +97,11 @@ const AppAuthenticate = () => {
             </View>
           </View>
         </LinearGradient>
-        {switchTab === "login" ? <LoginForm /> : <RegisterForm setSwitchTab={setSwitchTab} />}
+        {switchTab === "login" ? (
+          <LoginForm />
+        ) : (
+          <RegisterForm setSwitchTab={setSwitchTab} />
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
