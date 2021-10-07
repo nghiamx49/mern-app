@@ -58,8 +58,6 @@ const FormScreen = ({ user, token }) => {
   };
 
   const [errors, setErrors] = useState({
-    propertyType: "",
-    bedRoom: "",
     monthlyRentPrice: "",
     notes: "",
     address: "",
@@ -155,8 +153,6 @@ const FormScreen = ({ user, token }) => {
 
   const handleTextInput = (text, name, label) => {
     switch (name) {
-      // case 'propertyType':
-      // case 'bedRoom':
       case "address":
         if (text === "") {
           setErrors({ ...errors, [name]: `${label} must be existed` });
@@ -204,30 +200,31 @@ const FormScreen = ({ user, token }) => {
   };
 
   const handleBlurAddress = async () => {
-    const json = {
-      location: { street: data.address },
-      options: {
-        thumbMaps: false,
-        boundingBox: {
-          ul: {
-            lat: 16.116401,
-            lng: 108.125903,
-          },
-          lr: {
-            lat: 15.913131,
-            lng: 108.333807,
+    if (data.address !== "") {
+      const json = {
+        location: { street: data.address },
+        options: {
+          thumbMaps: false,
+          boundingBox: {
+            ul: {
+              lat: 16.116401,
+              lng: 108.125903,
+            },
+            lr: {
+              lat: 15.913131,
+              lng: 108.333807,
+            },
           },
         },
-      },
-    };
-    const geoRes = await axios.get(
-      `http://www.mapquestapi.com/geocoding/v1/address?key=${MAP_API_KEY}&inFormat=json&outFormat=json&json=${JSON.stringify(
-        { ...json }
-      )}`
-    );
-    const { lat, lng } = geoRes.data.results[0].locations[0].latLng;
-    setData({ ...data, geocode: `${lat},${lng}` });
-    console.log("address loaded");
+      };
+      const geoRes = await axios.get(
+        `http://www.mapquestapi.com/geocoding/v1/address?key=${MAP_API_KEY}&inFormat=json&outFormat=json&json=${JSON.stringify(
+          { ...json }
+        )}`
+      );
+      const { lat, lng } = geoRes.data.results[0].locations[0].latLng;
+      setData({ ...data, geocode: `${lat},${lng}` });
+    }
   };
 
   const handleSubmit = async () => {
@@ -244,7 +241,6 @@ const FormScreen = ({ user, token }) => {
         })
       );
       const response = await create("/properties/create", token, { ...data });
-      console.log(response?.data);
       if (response?.status !== 201) {
         setToggle(!toggle);
         setErrorDialog({ state: true, message: response.data.message });

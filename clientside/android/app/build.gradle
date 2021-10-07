@@ -126,6 +126,15 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
+    signingConfigs {
+    release {
+      storeFile file('rental-z-key.keystore')
+      storePassword 'mxnghia49'
+      keyAlias 'your_key_alias'
+      keyPassword 'mxnghia49'
+    }
+  }
+
     defaultConfig {
         applicationId "com.clientside"
         minSdkVersion rootProject.ext.minSdkVersion

@@ -14,12 +14,16 @@ import {
   FlatList,
   SafeAreaView,
   Dimensions,
+  PermissionsAndroid,
+  TouchableOpacity,
 } from "react-native";
 import RequestService from "../../services/request.service";
 import IoniIcon from "react-native-vector-icons/Ionicons";
 import CategoryItem from "../../components/CategoryItem";
 import { connect } from "react-redux";
 import AlternativeItem from "../../components/AlternativeItem";
+import Voice from "@react-native-community/voice";
+import IonicIcon from "react-native-vector-icons/Ionicons";
 
 import CustomDialog from "../../components/Dialog";
 
@@ -27,6 +31,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 const AdminHomeScreen = ({ token, navigation }) => {
   const [searchParam, setSearchParam] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
 
   const [activeItem, setActiveItem] = useState("");
 
@@ -41,16 +46,37 @@ const AdminHomeScreen = ({ token, navigation }) => {
     setListData(response.data.data);
   };
 
+  const onSpeechStart = (e) => {
+    setIsRecording(true);
+    console.log("Start recording: ", e);
+  };
+
+  const onSpeechEnd = (e) => {
+    setIsRecording(false);
+    console.log("Stop recording: ", e);
+  };
+
+  const onSpeechResults = (e) => {
+    let text = e.value[0];
+    setIsRecording(false);
+    setSearchParam(text);
+    searchDebouce(text);
+    console.log("Result: ", e);
+  };
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
       const fetchData = async () => {
         try {
+          const response = await get("/properties/", token);
           if (isActive) {
+            Voice.onSpeechStart = onSpeechStart;
+            Voice.onSpeechEnd = onSpeechEnd;
+            Voice.onSpeechResults = onSpeechResults;
             SplashScreen.hide();
-            getData();
+            setListData(response.data.data);
             flatlistRef?.current?.scrollToOffset({ animated: true, offset: 0 });
-            setActiveItem("");
           }
         } catch (error) {
           console.log(error);
@@ -58,6 +84,10 @@ const AdminHomeScreen = ({ token, navigation }) => {
       };
       fetchData();
       return () => {
+        Voice.destroy().then(Voice.removeAllListeners());
+        setActiveItem("");
+        setSearchParam("");
+        setIsRecording(false);
         isActive = false;
       };
     }, [token])
@@ -90,6 +120,27 @@ const AdminHomeScreen = ({ token, navigation }) => {
       setSearchParam(value);
       const response = await get(`/properties/?address=${value}`, token);
       setListData(response.data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleRecording = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA
+        );
+      } else {
+        if (isRecording) {
+          await Voice.stop();
+        } else {
+          await Voice.start("vi-VN");
+        }
+      }
     } catch (error) {
       console.log(error);
     }
@@ -158,6 +209,16 @@ const AdminHomeScreen = ({ token, navigation }) => {
               placeholderTextColor="#fff"
               onChangeText={(text) => searchDebouce(text)}
             />
+            <TouchableOpacity
+              style={styles.recording}
+              onPress={handleRecording}
+            >
+              <IonicIcon
+                name="mic-circle-sharp"
+                size={40}
+                color={isRecording ? "#9941ac" : "#fff"}
+              />
+            </TouchableOpacity>
           </View>
         </View>
       </ImageBackground>
@@ -179,9 +240,8 @@ const AdminHomeScreen = ({ token, navigation }) => {
           key={(item, index) => index}
         />
       </SafeAreaView>
-      <Text style={styles.sectionTitle}>Properies List</Text>
+      <Text style={styles.sectionTitle}>Properties List</Text>
       <FlatList
-        ref={flatlistRef}
         style={styles.listContainer}
         showsVerticalScrollIndicator={false}
         data={listData}
@@ -229,6 +289,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     position: "relative",
     width: "80%",
+    flexDirection: "row",
   },
   search: {
     borderBottomColor: "#fff",
@@ -240,7 +301,7 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     position: "absolute",
-    top: 13,
+    top: 26,
     left: 5,
   },
   sectionTitle: {
@@ -264,6 +325,11 @@ const styles = StyleSheet.create({
   listContainer: {
     marginHorizontal: 30,
     height: screenHeight,
+  },
+  recording: {
+    position: "absolute",
+    right: -30,
+    top: 23,
   },
 });
 

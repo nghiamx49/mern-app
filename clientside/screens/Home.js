@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 
 import { listProperty } from "../costants";
 import { useFocusEffect } from "@react-navigation/native";
@@ -15,6 +15,8 @@ import {
   SafeAreaView,
   Dimensions,
   Alert,
+  PermissionsAndroid,
+  TouchableOpacity,
 } from "react-native";
 import Carousel from "react-native-snap-carousel";
 import SplashScreen from "react-native-splash-screen";
@@ -23,11 +25,14 @@ import IoniIcon from "react-native-vector-icons/Ionicons";
 import CategoryItem from "../components/CategoryItem";
 import PropertyItem from "../components/PropertyItem";
 import { connect } from "react-redux";
+import Voice from "@react-native-community/voice";
+import IonicIcon from "react-native-vector-icons/Ionicons";
 
 const { width: screenWidth } = Dimensions.get("window");
 
 const HomeScreen = ({ token, navigation }) => {
   const [searchParam, setSearchParam] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
 
   const ref = useRef();
   const [activeItem, setActiveItem] = useState("");
@@ -43,6 +48,9 @@ const HomeScreen = ({ token, navigation }) => {
         try {
           const response = await get("/properties/", token);
           if (isActive) {
+            Voice.onSpeechStart = onSpeechStart;
+            Voice.onSpeechEnd = onSpeechEnd;
+            Voice.onSpeechResults = onSpeechResults;
             SplashScreen.hide();
             setListData(response.data.data);
             ref?.current?.scrollToOffset({ animated: true, offset: 0 });
@@ -53,6 +61,10 @@ const HomeScreen = ({ token, navigation }) => {
       };
       fetchData();
       return () => {
+        Voice.destroy().then(Voice.removeAllListeners());
+        setActiveItem("");
+        setSearchParam("");
+        setIsRecording(false);
         isActive = false;
       };
     }, [token])
@@ -62,6 +74,24 @@ const HomeScreen = ({ token, navigation }) => {
     let listData = [...listProperty];
     listData.splice(0, 1, { label: "All", value: "" });
     return listData;
+  };
+
+  const onSpeechStart = (e) => {
+    setIsRecording(true);
+    console.log("Start recording: ", e);
+  };
+
+  const onSpeechEnd = (e) => {
+    setIsRecording(false);
+    console.log("Stop recording: ", e);
+  };
+
+  const onSpeechResults = (e) => {
+    let text = e.value[0];
+    setIsRecording(false);
+    setSearchParam(text);
+    search(text);
+    console.log("Result: ", e);
   };
 
   const filter = async (value) => {
@@ -100,7 +130,7 @@ const HomeScreen = ({ token, navigation }) => {
     }
   };
 
-  const debouce = (func, wait) => {
+  const debounce = (func, wait) => {
     let timeout;
     return function (...args) {
       const context = this;
@@ -112,7 +142,24 @@ const HomeScreen = ({ token, navigation }) => {
     };
   };
 
-  const searchDebouce = useCallback(debouce(search, 1000), []);
+  const handleRecording = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA
+        );
+      } else {
+        Voice.start("vi-VN");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const searchDebounce = debounce(search, 1000);
 
   return (
     <KeyboardAvoidingView
@@ -138,8 +185,18 @@ const HomeScreen = ({ token, navigation }) => {
                 style={styles.search}
                 placeholder="Search..."
                 placeholderTextColor="#fff"
-                onChangeText={(text) => searchDebouce(text)}
+                onChangeText={(text) => searchDebounce(text)}
               />
+              <TouchableOpacity
+                style={styles.recording}
+                onPress={handleRecording}
+              >
+                <IonicIcon
+                  name="mic-circle-sharp"
+                  size={40}
+                  color={isRecording ? "#9941ac" : "#fff"}
+                />
+              </TouchableOpacity>
             </View>
           </View>
         </ImageBackground>
@@ -161,7 +218,7 @@ const HomeScreen = ({ token, navigation }) => {
             key={(item, index) => index}
           />
         </SafeAreaView>
-        <Text style={styles.sectionTitle}>Properies List</Text>
+        <Text style={styles.sectionTitle}>Properties List</Text>
         <View style={styles.itemContainer}>
           <Carousel
             data={listData}
@@ -208,6 +265,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     position: "relative",
     width: "100%",
+    flexDirection: "row",
   },
   search: {
     borderBottomColor: "#fff",
@@ -239,6 +297,11 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     marginVertical: 10,
+  },
+  recording: {
+    position: "absolute",
+    right: -39,
+    top: 13,
   },
 });
 

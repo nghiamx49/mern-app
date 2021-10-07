@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  TouchableOpacity,
+  PermissionsAndroid,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import Button from "../../components/Button";
@@ -18,9 +20,9 @@ const AddDescriptionScreen = ({ route, navigation }) => {
     token,
   } = route.params;
 
-  const { edit } = RequestService;
-
   const [descriptionVal, setDescriptionVal] = useState(description || "");
+
+  const { edit } = RequestService;
 
   const handleSubmit = async () => {
     const response = await edit(

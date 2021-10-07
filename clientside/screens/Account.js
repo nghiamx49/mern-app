@@ -51,7 +51,7 @@ const AccountScreen = ({ user, handleLogout, token, changeAvatar }) => {
         PermissionsAndroid.PERMISSIONS.CAMERA
       );
       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-        granted = await PermissionsAndroid.replace(
+        granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.CAMERA
         );
       }
