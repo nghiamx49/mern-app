@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 
-import { listProperty } from "../costants";
+import { listProperty } from "../constants";
 import { useFocusEffect } from "@react-navigation/native";
 
 import {

@@ -1,4 +1,4 @@
-import { LOGIN_SUCCESS, LOGOUT_SUCCESS, UPDATE_AVATAR } from "../costants/";
+import { LOGIN_SUCCESS, LOGOUT_SUCCESS, UPDATE_AVATAR } from "../constants/";
 
 export const loginSuccess = (payload) => {
   return { type: LOGIN_SUCCESS, payload: payload };

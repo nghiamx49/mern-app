@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import CustomDilog from "../../components/Dialog";
-import { listBedroomType, listFurnitureType } from "../../costants";
+import { listBedroomType, listFurnitureType } from "../../constants";
 import InputField from "../../components/InputField";
 import DropdownCustom from "../../components/Dropdown";
 import ConfirmDialog from "../../components/ConfirmDialog";

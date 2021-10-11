@@ -1,4 +1,4 @@
-import { LOGIN_SUCCESS, LOGOUT_SUCCESS, UPDATE_AVATAR } from "../costants";
+import { LOGIN_SUCCESS, LOGOUT_SUCCESS, UPDATE_AVATAR } from "../constants";
 const initialState = {
   user: {
     username: "",

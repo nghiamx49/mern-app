@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useRef } from "react";
 
-import { listProperty } from "../../costants";
+import { listProperty } from "../../constants";
 import { useFocusEffect } from "@react-navigation/native";
 import SplashScreen from "react-native-splash-screen";
 import {
@@ -24,7 +24,6 @@ import { connect } from "react-redux";
 import AlternativeItem from "../../components/AlternativeItem";
 import Voice from "@react-native-community/voice";
 import IonicIcon from "react-native-vector-icons/Ionicons";
-
 import CustomDialog from "../../components/Dialog";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");

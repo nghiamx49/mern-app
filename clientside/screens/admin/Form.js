@@ -24,7 +24,7 @@ import {
   listBedroomType,
   listFurnitureType,
   listProperty,
-} from "../../costants";
+} from "../../constants";
 import InputField from "../../components/InputField";
 import DropdownCustom from "../../components/Dropdown";
 import ConfirmDialog from "../../components/ConfirmDialog";
