@@ -62,14 +62,15 @@ const FormScreen = ({ user, token }) => {
     notes: "",
     address: "",
   });
+  const [disable, setDisable] = useState(true);
 
   useEffect(() => {
     if (
       data.bedRoom === "" ||
       data.monthlyRentPrice === "" ||
       data.propertyType === "" ||
-      errors.propertyType !== "" ||
-      errors.bedRoom !== "" ||
+      data.address === "" ||
+      errors.address !== "" ||
       errors.notes !== "" ||
       errors.monthlyRentPrice !== "" ||
       listImage.length === 0
@@ -78,11 +79,10 @@ const FormScreen = ({ user, token }) => {
     } else {
       setDisable(false);
     }
+    console.log(disable);
   }, [data, errors, listImage]);
 
   const [show, setShow] = useState(false);
-
-  const [disable, setDisable] = useState(true);
 
   const [errorDialog, setErrorDialog] = useState({ state: false, message: "" });
 
@@ -116,6 +116,13 @@ const FormScreen = ({ user, token }) => {
             });
             setToggle(false);
             setErrorDialog({ state: false, message: "" });
+            setErrors({
+              monthlyRentPrice: "",
+              notes: "",
+              address: "",
+            });
+            setDisable(true);
+            setIsLoading(false);
           }
         } catch (error) {
           console.log(error);
@@ -243,6 +250,7 @@ const FormScreen = ({ user, token }) => {
       const response = await create("/properties/create", token, { ...data });
       if (response?.status !== 201) {
         setToggle(!toggle);
+        setIsLoading(false);
         setErrorDialog({ state: true, message: response.data.message });
       } else {
         const updateImage = await update(
@@ -377,7 +385,6 @@ const FormScreen = ({ user, token }) => {
             error={errors.reporterName}
             icon={"person"}
             editable={false}
-            isRequired
           />
 
           {/* image picker */}
